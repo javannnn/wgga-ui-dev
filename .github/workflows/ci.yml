@@ -12,20 +12,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Detect Node project
+        id: detect
+        shell: bash
+        run: |
+          if [ -f package.json ]; then
+            echo "is_node=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_node=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Use Node
+        if: steps.detect.outputs.is_node == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
       - name: Install
+        if: steps.detect.outputs.is_node == 'true'
         run: npm ci
 
       - name: Lint
+        if: steps.detect.outputs.is_node == 'true'
         run: npm run lint --if-present
 
       - name: Test
+        if: steps.detect.outputs.is_node == 'true'
         run: npm test --if-present
 
       - name: Build
+        if: steps.detect.outputs.is_node == 'true'
         run: npm run build --if-present
+
+      - name: No Node app yet
+        if: steps.detect.outputs.is_node != 'true'
+        run: echo "No package.json in repo. Skipping Node CI."
